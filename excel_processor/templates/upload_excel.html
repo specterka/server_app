@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Загрузите выгрузку с кабинета продавца</title>
+    <!-- Add Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <h1>Загрузите выгрузку с кабинета продавца</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="{{ form.excel_file.auto_id }}">Excel файл:</label>
+            <input type="file" name="{{ form.excel_file.html_name }}" id="{{ form.excel_file.auto_id }}" class="form-control-file">
+        </div>
+        <button type="submit" class="btn btn-primary">Загрузить</button>
+    </form>
+</body>
+</html>

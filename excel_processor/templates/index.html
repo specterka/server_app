@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel Data Table</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+    <h1>Upload Excel File</h1>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="excel_file" required>
+        <input type="submit" value="Upload">
+    </form>
+
+    {% if data %}
+    <h1>Excel Data</h1>
+    <table border="1" id="data-table">
+        <thead>
+            <tr>
+                {% for col in data.0 %}
+                <th>{{ forloop.counter }}</th>
+                {% endfor %}
+                <th>Weight</th>
+                <th>Прибыль</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                {% for cell in row %}
+                <td><input type="text" class="editable" value="{{ cell }}"></td>
+                {% endfor %}
+                <td><input type="number" class="user-input"></td>
+                <td class="result"></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                {% for col in data.0 %}
+                <th>{{ forloop.counter }}</th>
+                {% endfor %}
+                <th>Weight</th>
+                <th>Прибыль</th>
+            </tr>
+        </tfoot>
+    </table>
+    {% endif %}
+
+    <script>
+        $(document).ready(function() {
+            // DataTable initialization
+            var table = $('#data-table').DataTable({
+                initComplete: function() {
+                    // Enable column filters
+                    this.api().columns().every(function() {
+                        var column = this;
+                        var select = $('<select><option value=""></option></select>')
+                            .appendTo($(column.footer()).empty())
+                            .on('change', function() {
+                                var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                                column.search(val ? '^' + val + '$' : '', true, false).draw();
+                            });
+
+                        column.data().unique().sort().each(function(d, j) {
+                            select.append('<option value="' + d + '">' + d + '</option>');
+                        });
+                    });
+                }
+            });
+
+            // User input event
+            $('#data-table tbody').on('input', '.user-input', function() {
+                var selectedColumnIndex = parseInt($('#selected-column').val());
+                var row = $(this).closest('tr');
+                var selectedColumnValue = parseFloat(row.find('td').eq(selectedColumnIndex).text());
+                var userInputValue = parseFloat($(this).val());
+
+                if (!isNaN(userInputValue)) {
+                    var result = selectedColumnValue - userInputValue;
+                    row.find('.result').text(result);
+                } else {
+                    row.find('.result').text('');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

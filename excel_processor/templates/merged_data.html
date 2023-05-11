@@ -1,0 +1,87 @@
+<html>
+<head>
+    <title>Merged Data</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Merged Data</h1>
+    <table>
+            <thead>
+                <tr>
+                    {% for column in merged_data.0.keys %}
+                    <th>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in merged_data %}
+                <tr>
+                    {% for value in row.values %}
+                    <td>
+                        <input type="text" value="{{ value }}">
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    <button id="save-changes">Сохранить изменения</button>
+    <a id="download" href="#" style="display:none;" download>Скачать файл</a>
+    <script>
+        function gatherData() {
+            var data = [];
+            $('table tbody tr').each(function() {
+                var row = {};
+                $(this).find('td input').each(function(index) {
+                    var columnName = $('table thead th').eq(index).text();
+                    row[columnName] = $(this).val();
+                });
+                data.push(row);
+            });
+            return data;
+        }
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        var csrfToken = getCookie('csrftoken');
+
+        $('#save-changes').click(function() {
+            var data = gatherData();
+            $.ajax({
+                url: '{% url "save_changes" %}',
+                method: 'POST',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        alert(response.message);
+                        $('#download').attr('href', response.download_url);
+                        $('#download').css('display', 'inline');
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error saving changes.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
